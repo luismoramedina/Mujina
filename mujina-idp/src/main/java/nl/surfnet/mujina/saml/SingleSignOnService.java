@@ -77,7 +77,14 @@ public class SingleSignOnService implements HttpRequestHandler {
       return;
     }
 
-    AuthnRequestInfo info = new AuthnRequestInfo(authnRequest.getAssertionConsumerServiceURL(), authnRequest.getID(), authnRequest.getIssuer().getValue());
+    String assertionConsumerServiceURL = authnRequest.getAssertionConsumerServiceURL();
+    //Accept AssertionConsumerServiceIndex
+    if (assertionConsumerServiceURL == null) {
+      //TODO configuration map
+      Integer assertionConsumerServiceIndex = authnRequest.getAssertionConsumerServiceIndex();
+      assertionConsumerServiceURL = "http://assertion.consumer.service.generated.by.index/" + assertionConsumerServiceIndex;
+    }
+    AuthnRequestInfo info = new AuthnRequestInfo(assertionConsumerServiceURL, authnRequest.getID(), authnRequest.getIssuer().getValue());
 
     logger.debug("AuthnRequest {} verified.  Forwarding to SSOSuccessAuthnResponder", info);
     request.getSession().setAttribute(AuthnRequestInfo.class.getName(), info);
