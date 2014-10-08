@@ -22,14 +22,20 @@ import nl.surfnet.mujina.util.IDService;
 import nl.surfnet.mujina.util.TimeService;
 
 import org.joda.time.DateTime;
+import org.opensaml.common.SignableSAMLObject;
 import org.opensaml.saml2.core.Assertion;
 import org.opensaml.saml2.core.Issuer;
 import org.opensaml.saml2.core.Response;
 import org.opensaml.saml2.core.StatusCode;
 import org.opensaml.saml2.core.impl.ResponseBuilder;
 import org.opensaml.xml.XMLObjectBuilderFactory;
+import org.opensaml.xml.io.MarshallingException;
 import org.opensaml.xml.security.credential.Credential;
 import org.springframework.security.core.AuthenticationException;
+import org.opensaml.xml.signature.Signature;
+import org.opensaml.xml.signature.SignatureConstants;
+import org.opensaml.xml.signature.SignatureException;
+import org.opensaml.xml.signature.Signer;
 
 public class AuthnResponseGenerator {
 
@@ -39,6 +45,8 @@ public class AuthnResponseGenerator {
   private final AssertionGenerator assertionGenerator;
   private final IDService idService;
   private final TimeService timeService;
+  private final IdpConfiguration idpConfiguration;
+  private final Credential signingCredential;
 
   StatusGenerator statusGenerator;
 
@@ -48,6 +56,8 @@ public class AuthnResponseGenerator {
     this.idService = idService;
     this.timeService = timeService;
     issuerGenerator = new IssuerGenerator(issuingEntityName);
+    this.idpConfiguration = idpConfiguration;
+    this.signingCredential = signingCredential;
     assertionGenerator = new AssertionGenerator(signingCredential, issuingEntityName, timeService, idService, idpConfiguration);
     statusGenerator = new StatusGenerator();
   }
@@ -71,7 +81,31 @@ public class AuthnResponseGenerator {
     authResponse.setDestination(recepientAssertionConsumerURL);
     authResponse.setStatus(statusGenerator.generateStatus(StatusCode.SUCCESS_URI));
 
+    if (idpConfiguration.needsSignResponse()) {
+      signResponse(authResponse);
+    }
+
     return authResponse;
+  }
+
+  //TODO refactor
+  private void signResponse(final SignableSAMLObject response) {
+      Signature signature = (Signature) org.opensaml.Configuration.getBuilderFactory().getBuilder(Signature.DEFAULT_ELEMENT_NAME)
+              .buildObject(Signature.DEFAULT_ELEMENT_NAME);
+      signature.setSigningCredential(signingCredential);
+      signature.setSignatureAlgorithm(SignatureConstants.ALGO_ID_SIGNATURE_RSA_SHA1);
+      signature.setCanonicalizationAlgorithm(SignatureConstants.ALGO_ID_C14N_EXCL_OMIT_COMMENTS);
+      response.setSignature(signature);
+      try {
+          org.opensaml.Configuration.getMarshallerFactory().getMarshaller(response).marshall(response);
+      } catch (MarshallingException e) {
+          e.printStackTrace();
+      }
+      try {
+          Signer.signObject(signature);
+      } catch (SignatureException e) {
+          e.printStackTrace();
+      }
   }
 
   public Response generateAuthnResponseFailure(String recepientAssertionConsumerURL, String inResponseTo, AuthenticationException ae) {

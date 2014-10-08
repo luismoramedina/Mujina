@@ -19,11 +19,7 @@ package nl.surfnet.mujina.controllers;
 import java.util.ArrayList;
 import java.util.List;
 
-import nl.surfnet.mujina.model.Attribute;
-import nl.surfnet.mujina.model.AuthenticationMethod;
-import nl.surfnet.mujina.model.IdpConfiguration;
-import nl.surfnet.mujina.model.SimpleAuthentication;
-import nl.surfnet.mujina.model.User;
+import nl.surfnet.mujina.model.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,4 +85,14 @@ public class IdentityProviderAPI {
     final AuthenticationMethod.Method method = AuthenticationMethod.Method.valueOf(authenticationMethod.getValue());
     configuration.setAuthentication(method);
   }
+
+  @RequestMapping(value = { "/needs-sign-response" }, method = RequestMethod.PUT)
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @ResponseBody
+  public void setNeedsSignResponse(@RequestBody NeedsSigning needsSigning) {
+    log.debug("Request to set signing Response needed");
+    configuration.setSignResponse(needsSigning.getValue());
+  }
+
+
 }

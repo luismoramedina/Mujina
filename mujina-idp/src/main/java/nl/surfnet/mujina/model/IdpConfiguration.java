@@ -27,4 +27,8 @@ public interface IdpConfiguration extends CommonConfiguration {
   AuthenticationMethod.Method getAuthentication();
 
   void setAuthentication(AuthenticationMethod.Method method);
+
+  boolean needsSignResponse();
+
+  void setSignResponse(boolean needsSignResponse);
 }

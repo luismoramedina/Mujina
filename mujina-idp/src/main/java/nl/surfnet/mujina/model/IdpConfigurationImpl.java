@@ -34,6 +34,7 @@ public class IdpConfigurationImpl extends CommonConfigurationImpl implements Idp
   private Map<String, List<String>> attributes = new TreeMap<>();
   private Collection<SimpleAuthentication> users = new ArrayList<SimpleAuthentication>();
   private AuthenticationMethod.Method authMethod;
+  private boolean needsSignResponse;
 
   public IdpConfigurationImpl() {
     reset();
@@ -96,6 +97,15 @@ public class IdpConfigurationImpl extends CommonConfigurationImpl implements Idp
   @Override
   public void setAuthentication(final AuthenticationMethod.Method method) {
     this.authMethod = method;
+  }
+
+  @Override
+  public boolean needsSignResponse() {
+    return this.needsSignResponse;
+  }
+  @Override
+  public void setSignResponse(boolean needsSignResponse) {
+    this.needsSignResponse = needsSignResponse;
   }
 
 }
