@@ -126,7 +126,9 @@ public class AssertionGenerator {
     assertion.setID(idService.generateID());
     assertion.setIssueInstant(timeService.getCurrentDateTime());
 
-    signAssertion(assertion);
+    if (idpConfiguration.needsSigning()) {
+      signAssertion(assertion);
+    }
 
     return assertion;
   }

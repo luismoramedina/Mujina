@@ -99,18 +99,20 @@ public class SSOSuccessAuthnResponder implements HttpRequestHandler {
         SimpleAuthentication authToken = (SimpleAuthentication) SecurityContextHolder.getContext().getAuthentication();
         DateTime authnInstant = new DateTime(request.getSession().getCreationTime());
 
-        CriteriaSet criteriaSet = new CriteriaSet();
-        criteriaSet.add(new EntityIDCriteria(idpConfiguration.getEntityID()));
-        criteriaSet.add(new UsageCriteria(UsageType.SIGNING));
         Credential signingCredential = null;
-        try {
+        if (idpConfiguration.needsSigning()) {
+          CriteriaSet criteriaSet = new CriteriaSet();
+          criteriaSet.add(new EntityIDCriteria(idpConfiguration.getEntityID()));
+          criteriaSet.add(new UsageCriteria(UsageType.SIGNING));
+          try {
             signingCredential = credentialResolver.resolveSingle(criteriaSet);
-        } catch (org.opensaml.xml.security.SecurityException e) {
+          } catch (org.opensaml.xml.security.SecurityException e) {
             logger.warn("Unable to resolve EntityID while signing", e);
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             return;
+          }
+          Validate.notNull(signingCredential);
         }
-        Validate.notNull(signingCredential);
 
         AuthnResponseGenerator authnResponseGenerator = new AuthnResponseGenerator(signingCredential, idpConfiguration.getEntityID(), timeService, idService, idpConfiguration);
         EndpointGenerator endpointGenerator = new EndpointGenerator();

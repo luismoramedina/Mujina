@@ -33,7 +33,7 @@ public abstract class CommonConfigurationImpl implements CommonConfiguration {
 
   protected KeyStore keyStore;
   protected String keystorePassword = "secret";
-  private boolean needsSigning;
+  private boolean needsSigning = true;/*default value*/
 
   @Override
   public Map<String, String> getPrivateKeyPasswords() {
